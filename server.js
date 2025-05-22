@@ -1,5 +1,5 @@
-import express from "express"
 import cors from "cors"
+import express from "express"
 
 // Defines the port the app will run on. Defaults to 8080, but can be overridden
 // when starting the server. Example command to overwrite PORT env variable value:
