@@ -1,5 +1,6 @@
 import cors from "cors"
 import express from "express"
+import listEndpoints from "express-list-endpoints"
 
 import thoughtsList from "./data/thoughtsList.json"
 
@@ -14,12 +15,26 @@ app.use(express.json())
 
 // Start defining your routes here
 app.get("/", (req, res) => {
-  res.send("Hello !")
+  const endpoints = listEndpoints(app)
+  res.json({
+    message: "Hello Happy Thoughts API",
+    endpoints: endpoints
+  })
 })
 
-// Endpoint for all thought
+// Endpoint for all thoughts
+// Query params to filter
 app.get("/thoughts", (req, res) => {
-  res.json(thoughtsList)
+
+  const { hearts } = req.query
+
+  let heartsFilter = thoughtsList
+
+  if (hearts) {
+    heartsFilter = heartsFilter.filter(t => t.hearts === +hearts )
+  }
+ 
+  res.json(heartsFilter)
 })
 
 // Endpoint for one thought
