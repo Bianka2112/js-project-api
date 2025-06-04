@@ -138,6 +138,31 @@ app.delete("/thoughts/:id", async (req, res) => {
   }
 })
 
+app.patch("/thoughts/:id", async (req, res) => {
+
+  const { id } = req.params
+  const { editThought } = req.body
+  
+  const thought = await Thought.findByIdAndUpdate( id, { message: editThought }, { new: true, runValidators: true })
+  
+  try {
+    if (!thought) {
+     return res.status(404).json({ error: "This thought not found, no update possible." })
+    }
+      res.status(201).json({
+        success: true,
+        response: thought,
+        message: "Thought updated successfully."
+    })
+  } catch (error){
+    res.status(500).json({
+      success: false,
+      response: error,
+      message: "Could not update thought"
+    })
+  }
+})
+
 // Start the server
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`)
