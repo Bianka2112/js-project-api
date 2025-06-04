@@ -16,16 +16,18 @@ app.use(cors())
 app.use(express.json())
 
 const thoughtSchema = new mongoose.Schema({
-  _id: String,
   message: {
+    required: true,
     type: String,
     minlength: 5,
     maxlength: 140},
-  hearts: Number,
+  hearts: {
+    type: Number,
+    default: 0},
   createdAt: {
     type: Date,
     default: Date.now
-  },
+  }
 })
 
 const Thought = mongoose.model("Thought", thoughtSchema)
@@ -58,7 +60,7 @@ try {
   if (thoughtsList.length === 0) {
     return res.status(404).json({
       success: false,
-      response: null,
+      response: [],
       message: "No thoughts available."
     })
   }
@@ -89,9 +91,29 @@ app.get("/thoughts/:id", async (req, res) => {
       res.status(500).json({
         success: false,
         response: error,
-        message: "Failed to fetch thoughts."
+        message: "Failed to find this thought."
       })
     }
+})
+
+app.post("/thoughts", async (req, res) => {
+  const { message, hearts, createdAt } = req.body
+
+  try {
+    const newThought = await new Thought({ message, hearts, createdAt }).save()
+
+    res.status(201).json({
+      success: true,
+      response: newThought,
+      message: "Thought posted successfully."
+    })
+  } catch (error){
+    res.status(500).json({
+      success: false,
+      response: error,
+      message: "Could not post thought"
+    })
+  }
 })
 
 // Start the server
