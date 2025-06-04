@@ -52,7 +52,8 @@ app.get("/", (req, res) => {
 // Endpoint for all thoughts
 // Query params to filter
 app.get("/thoughts", async (req, res) => {
-  
+  const thoughts = await Thought.find()
+
 try {
   if (thoughtsList.length === 0) {
     return res.status(404).json({
@@ -61,11 +62,7 @@ try {
       message: "No thoughts available."
     })
   }
-    res.status(200).json({
-      success: true,
-      response: thoughtsList,
-      message: "All posted thoughts available"
-    })
+    res.status(200).json(thoughts)
   } catch (error) {
     res.status(500).json({
       success: false,
