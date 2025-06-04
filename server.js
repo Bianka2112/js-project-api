@@ -63,6 +63,7 @@ try {
     })
   }
     res.status(200).json(thoughts)
+
   } catch (error) {
     res.status(500).json({
       success: false,
@@ -73,17 +74,24 @@ try {
 })
 
 // Endpoint for one thought
-app.get("/thoughts/:id", (req, res) => {
-  
-  console.log("req.params", req.params.id)
+app.get("/thoughts/:id", async (req, res) => {
 
-  const aThought = thoughtsList.find(t => t._id === req.params.id)
+  const aThought = await Thought.findById(req.params.id)
 
-  if (!aThought) {
-    return res.status(404).json({ error: "thought not found" })
-  }
+  try {
+    if (!aThought) {
+      return res.status(404).json({ error: "thought not found" })
+      }
 
-  res.json(aThought)
+    res.status(200).json(aThought)
+
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        response: error,
+        message: "Failed to fetch thoughts."
+      })
+    }
 })
 
 // Start the server
