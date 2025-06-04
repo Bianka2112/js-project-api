@@ -51,17 +51,28 @@ app.get("/", (req, res) => {
 
 // Endpoint for all thoughts
 // Query params to filter
-app.get("/thoughts", (req, res) => {
-
-  const { hearts } = req.query
-
-  let heartsFilter = thoughtsList
-
-  if (hearts) {
-    heartsFilter = heartsFilter.filter(t => t.hearts === +hearts )
+app.get("/thoughts", async (req, res) => {
+  
+try {
+  if (thoughtsList.length === 0) {
+    return res.status(404).json({
+      success: false,
+      response: null,
+      message: "No thoughts available."
+    })
   }
- 
-  res.json(heartsFilter)
+    res.status(200).json({
+      success: true,
+      response: thoughtsList,
+      message: "All posted thoughts available"
+    })
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      response: error,
+      message: "Failed to fetch thoughts."
+    })
+  }
 })
 
 // Endpoint for one thought
