@@ -116,6 +116,28 @@ app.post("/thoughts", async (req, res) => {
   }
 })
 
+app.delete("/thoughts/:id", async (req, res) => {
+  
+  const delThought = await Thought.findByIdAndDelete(req.params.id)
+  
+  try {
+    if (!delThought) {
+     return res.status(404).json({ error: "This thought not found" })
+    }
+      res.status(201).json({
+        success: true,
+        response: delThought,
+        message: "Thought deleted successfully."
+    })
+  } catch (error){
+    res.status(500).json({
+      success: false,
+      response: error,
+      message: "Could not delete thought"
+    })
+  }
+})
+
 // Start the server
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`)
