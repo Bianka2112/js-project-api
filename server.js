@@ -1,19 +1,46 @@
 import cors from "cors"
 import express from "express"
 import listEndpoints from "express-list-endpoints"
+import mongoose from "mongoose"
 
 import thoughtsList from "./data/thoughtsList.json"
 
-// when starting the server. Example command to overwrite PORT env variable value:
-// PORT=9000 npm start
+// CONNECTION SETTINGS
 const port = process.env.PORT || 8000
 const app = express()
 
-// Add middlewares to enable cors and json body parsing
+const mongoUrl = process.env.MONGO_URL || "mongodb://localhost/thoughts"
+mongoose.connect(mongoUrl)
+
 app.use(cors())
 app.use(express.json())
 
-// Start defining your routes here
+const thoughtSchema = new mongoose.Schema({
+  _id: String,
+  message: {
+    type: String,
+    minlength: 5,
+    maxlength: 140},
+  hearts: Number,
+  createdAt: {
+    type: Date,
+    default: Date.now
+  },
+})
+
+const Thought = mongoose.model("Thought", thoughtSchema)
+
+if (process.env.RESET_DB) {
+  const seedDatabase = async () => {
+    await Thought.deleteMany({})
+    thoughtsList.forEach(thought => {
+      new Thought(thought).save()
+    })
+  }
+  seedDatabase()
+}
+
+// Start defining routes here
 app.get("/", (req, res) => {
   const endpoints = listEndpoints(app)
   res.json({
