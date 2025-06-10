@@ -175,9 +175,9 @@ app.patch("/thoughts/:id", async (req, res) => {
 // POST A LIKE
 app.post("/thoughts/:id/like", async (req, res) => {
 
-  const { id } = req.params
+  const { _id } = req.params
   
-  const thought = await Thought.findByIdAndUpdate( id, { $inc: { hearts: 1 } }, { new: true, runValidators: true })
+  const thought = await Thought.findByIdAndUpdate( _id, { $inc: { hearts: 1 } }, { new: true, runValidators: true })
   
   try {
     if (!thought) {
