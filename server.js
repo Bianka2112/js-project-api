@@ -84,9 +84,9 @@ try {
 // GET ONE THOUGHT
 app.get("/thoughts/:id", async (req, res) => {
 
-  const aThought = await Thought.findById(req.params.id)
-
   try {
+    const aThought = await Thought.findById(req.params.id)
+    
     if (!aThought) {
       return res.status(404).json({ error: "thought not found" })
       }
@@ -126,9 +126,9 @@ app.post("/thoughts", async (req, res) => {
 // DELETE ONE THOUGHT
 app.delete("/thoughts/:id", async (req, res) => {
   
-  const delThought = await Thought.findByIdAndDelete(req.params.id)
-  
   try {
+    const delThought = await Thought.findByIdAndDelete(req.params.id)
+    
     if (!delThought) {
      return res.status(404).json({ error: "This thought not found" })
     }
@@ -152,9 +152,9 @@ app.patch("/thoughts/:id", async (req, res) => {
   const { id } = req.params
   const { editThought } = req.body
   
-  const thought = await Thought.findByIdAndUpdate( id, { message: editThought }, { new: true, runValidators: true })
-  
   try {
+    const thought = await Thought.findByIdAndUpdate( id, { message: editThought }, { new: true, runValidators: true })
+    
     if (!thought) {
      return res.status(404).json({ error: "This thought not found, no update possible." })
     }
@@ -177,9 +177,9 @@ app.post("/thoughts/:id/like", async (req, res) => {
 
   const { _id } = req.params
   
-  const thought = await Thought.findByIdAndUpdate( _id, { $inc: { hearts: 1 } }, { new: true, runValidators: true })
-  
   try {
+    const thought = await Thought.findByIdAndUpdate( _id, { $inc: { hearts: 1 } }, { new: true, runValidators: true })
+    
     if (!thought) {
      return res.status(404).json({ error: "This thought not found, no update possible." })
     }
