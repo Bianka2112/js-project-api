@@ -175,10 +175,10 @@ app.patch("/thoughts/:id", async (req, res) => {
 // POST A LIKE
 app.post("/thoughts/:id/like", async (req, res) => {
 
-  const { _id } = req.params
+  const { id } = req.params
   
   try {
-    const thought = await Thought.findByIdAndUpdate( _id, { $inc: { hearts: 1 } }, { new: true, runValidators: true })
+    const thought = await Thought.findByIdAndUpdate( id, { $inc: { hearts: 1 } }, { new: true, runValidators: true })
     
     if (!thought) {
      return res.status(404).json({ error: "This thought not found, no update possible." })
