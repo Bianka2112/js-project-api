@@ -2,6 +2,7 @@ import cors from "cors"
 import express from "express"
 import listEndpoints from "express-list-endpoints"
 import mongoose from "mongoose"
+import dotenv from "dotenv"
 
 import thoughtsList from "./data/thoughtsList.json"
 
@@ -9,12 +10,14 @@ import thoughtsList from "./data/thoughtsList.json"
 const port = process.env.PORT || 8000
 const app = express()
 
+dotenv.config()
 const mongoUrl = process.env.MONGO_URL || "mongodb://localhost/thoughts"
 mongoose.connect(mongoUrl)
 
 app.use(cors())
 app.use(express.json())
 
+// MONGOOSE METHODS
 const thoughtSchema = new mongoose.Schema({
   message: {
     required: true,
@@ -42,7 +45,7 @@ if (process.env.RESET_DB) {
   seedDatabase()
 }
 
-// Start defining routes here
+// ENDPOINTS DOC
 app.get("/", (req, res) => {
   const endpoints = listEndpoints(app)
   res.json({
@@ -51,8 +54,7 @@ app.get("/", (req, res) => {
   })
 })
 
-// Endpoint for all thoughts
-// Query params to filter
+// GET ALL THOUGHTS
 app.get("/thoughts", async (req, res) => {
   const thoughts = await Thought.find()
 
@@ -64,7 +66,11 @@ try {
       message: "No thoughts available."
     })
   }
-    res.status(200).json(thoughts)
+    res.status(200).json({
+      success: true,
+      response: thoughts,
+      message: "thoughts available."
+    })
 
   } catch (error) {
     res.status(500).json({
@@ -75,7 +81,7 @@ try {
   }
 })
 
-// Endpoint for one thought
+// GET ONE THOUGHT
 app.get("/thoughts/:id", async (req, res) => {
 
   const aThought = await Thought.findById(req.params.id)
@@ -96,6 +102,7 @@ app.get("/thoughts/:id", async (req, res) => {
     }
 })
 
+// POST THOUGHT
 app.post("/thoughts", async (req, res) => {
   const { message, hearts, createdAt } = req.body
 
@@ -116,6 +123,7 @@ app.post("/thoughts", async (req, res) => {
   }
 })
 
+// DELETE ONE THOUGHT
 app.delete("/thoughts/:id", async (req, res) => {
   
   const delThought = await Thought.findByIdAndDelete(req.params.id)
@@ -138,6 +146,7 @@ app.delete("/thoughts/:id", async (req, res) => {
   }
 })
 
+// UPDATE THOUGHT
 app.patch("/thoughts/:id", async (req, res) => {
 
   const { id } = req.params
@@ -159,6 +168,31 @@ app.patch("/thoughts/:id", async (req, res) => {
       success: false,
       response: error,
       message: "Could not update thought"
+    })
+  }
+})
+
+// POST A LIKE
+app.post("/thoughts/:id/like", async (req, res) => {
+
+  const { id } = req.params
+  
+  const thought = await Thought.findByIdAndUpdate( id, { $inc: { hearts: 1 } }, { new: true, runValidators: true })
+  
+  try {
+    if (!thought) {
+     return res.status(404).json({ error: "This thought not found, no update possible." })
+    }
+      res.status(201).json({
+        success: true,
+        response: thought,
+        message: "New like added."
+    })
+  } catch (error){
+    res.status(500).json({
+      success: false,
+      response: error,
+      message: "Could not update likes."
     })
   }
 })
