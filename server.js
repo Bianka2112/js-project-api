@@ -3,7 +3,9 @@ import express from "express"
 import listEndpoints from "express-list-endpoints"
 import mongoose from "mongoose"
 import dotenv from "dotenv"
-
+import bcrypt from "bcryptjs"
+import { User } from "./models/User"
+import { Thought } from "./models/Thought"
 import thoughtsList from "./data/thoughtsList.json"
 
 // CONNECTION SETTINGS
@@ -11,30 +13,84 @@ const port = process.env.PORT || 8000
 const app = express()
 
 dotenv.config()
-const mongoUrl = process.env.MONGO_URL || "mongodb://localhost/thoughts"
-mongoose.connect(mongoUrl)
+const mongoUrl = process.env.MONGO_URL || "mongodb://localhost:27017/thoughts"
+console.log("🔌 Connecting to MongoDB at:", mongoUrl)
+
+mongoose.connect(mongoUrl, {
+  autoIndex: true
+})
+.then(() => {
+  console.log("🌱 Connected to DB:", mongoose.connection.db.databaseName);
+})
+.catch((err) => {
+  console.error("❌ MongoDB connection error:", err)
+})
 
 app.use(cors())
 app.use(express.json())
 
-// MONGOOSE METHODS
-const thoughtSchema = new mongoose.Schema({
-  message: {
-    required: true,
-    type: String,
-    minlength: 5,
-    maxlength: 140},
-  hearts: {
-    type: Number,
-    default: 0},
-  createdAt: {
-    type: Date,
-    default: Date.now
+// MIDDLEWARE TO AUTH
+const authenticateUser = async (req, res, next) => {
+  const user = await User.findOne({accessToken: req.header("Authorization")})
+  if(user) {
+    req.user = user
+    next()
+  } else {
+    res.status(401).json({loggedOut: true})
+  }
+}
+
+// REGISTRATION ENDPOINT - ASSIGN ENCRYPTED TOKEN (CREATE)
+app.post("/users", async (req, res) => {
+  try {
+    const { username, email, password } = req.body
+    if (!username || !password) {
+      return res.status(400).json({ error: "username and password are required"})
+    }
+
+    const salt = bcrypt.genSaltSync()
+    const user = new User({ username, email, password: bcrypt.hashSync(password, salt) })
+    await user.save()
+
+    res.status(200).json({
+      message: "Signup success",
+      success: true,
+      id: user._id, 
+      accessToken: user.accessToken})
+  } catch(err) {
+      console.error(err)
+      res.status(400).json({
+        message: "Could not create user", 
+        errors: err.errors})
+    }
+})
+
+// LOGIN ENDPOINT (FINDS USER)
+app.post("/login", async (req, res) => {
+  try {
+    const { username, password } = req.body 
+
+    const user = await User.findOne({ username: req.body.username })
+    if (!user) {
+      return res.status(404).json({ 
+        success: false, 
+        message: "User does not exist"})
+    }
+    
+    if (user && bcrypt.compareSync(req.body.password, user.password)) {
+      res.status(201).json({
+        success: true,
+        message: "User logged in",
+        userId: user.id, 
+        accessToken: user.accessToken})
+  }} catch(err) {
+    res.status(400).json({
+      success: false,
+      notFound: true})
   }
 })
 
-const Thought = mongoose.model("Thought", thoughtSchema)
-
+// SEED DATABASE 
 if (process.env.RESET_DB) {
   const seedDatabase = async () => {
     await Thought.deleteMany({})
@@ -56,9 +112,9 @@ app.get("/", (req, res) => {
 
 // GET ALL THOUGHTS
 app.get("/thoughts", async (req, res) => {
+  
+  try {
   const thoughts = await Thought.find()
-
-try {
   if (thoughtsList.length === 0) {
     return res.status(404).json({
       success: false,
@@ -79,27 +135,6 @@ try {
       message: "Failed to fetch thoughts."
     })
   }
-})
-
-// GET ONE THOUGHT
-app.get("/thoughts/:id", async (req, res) => {
-
-  try {
-    const aThought = await Thought.findById(req.params.id)
-    
-    if (!aThought) {
-      return res.status(404).json({ error: "thought not found" })
-      }
-
-    res.status(200).json(aThought)
-
-    } catch (error) {
-      res.status(500).json({
-        success: false,
-        response: error,
-        message: "Failed to find this thought."
-      })
-    }
 })
 
 // POST THOUGHT
@@ -124,7 +159,7 @@ app.post("/thoughts", async (req, res) => {
 })
 
 // DELETE ONE THOUGHT
-app.delete("/thoughts/:id", async (req, res) => {
+app.delete("/thoughts/:id", authenticateUser, async (req, res) => {
   
   try {
     const delThought = await Thought.findByIdAndDelete(req.params.id)
@@ -146,8 +181,8 @@ app.delete("/thoughts/:id", async (req, res) => {
   }
 })
 
-// UPDATE THOUGHT
-app.patch("/thoughts/:id", async (req, res) => {
+// UPDATE/EDIT THOUGHT
+app.patch("/thoughts/:id", authenticateUser, async (req, res) => {
 
   const { id } = req.params
   const { editThought } = req.body
@@ -196,6 +231,7 @@ app.post("/thoughts/:id/like", async (req, res) => {
     })
   }
 })
+
 
 // Start the server
 app.listen(port, () => {
