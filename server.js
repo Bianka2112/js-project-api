@@ -3,10 +3,9 @@ import express from "express"
 import listEndpoints from "express-list-endpoints"
 import mongoose from "mongoose"
 import dotenv from "dotenv"
-import bcrypt from "bcryptjs"
-import { User } from "./models/User"
 import { Thought } from "./models/Thought"
 import thoughtsList from "./data/thoughtsList.json"
+import authRouter, { authenticateUser } from "./routes/authRouter"
 
 // CONNECTION SETTINGS
 const port = process.env.PORT || 8000
@@ -29,66 +28,8 @@ mongoose.connect(mongoUrl, {
 app.use(cors())
 app.use(express.json())
 
-// MIDDLEWARE TO AUTH
-const authenticateUser = async (req, res, next) => {
-  const user = await User.findOne({accessToken: req.header("Authorization")})
-  if(user) {
-    req.user = user
-    next()
-  } else {
-    res.status(401).json({loggedOut: true})
-  }
-}
-
-// REGISTRATION ENDPOINT - ASSIGN ENCRYPTED TOKEN (CREATE)
-app.post("/users", async (req, res) => {
-  try {
-    const { username, email, password } = req.body
-    if (!username || !password) {
-      return res.status(400).json({ error: "username and password are required"})
-    }
-
-    const salt = bcrypt.genSaltSync()
-    const user = new User({ username, email, password: bcrypt.hashSync(password, salt) })
-    await user.save()
-
-    res.status(200).json({
-      message: "Signup success",
-      success: true,
-      id: user._id, 
-      accessToken: user.accessToken})
-  } catch(err) {
-      console.error(err)
-      res.status(400).json({
-        message: "Could not create user", 
-        errors: err.errors})
-    }
-})
-
-// LOGIN ENDPOINT (FINDS USER)
-app.post("/login", async (req, res) => {
-  try {
-    const { username, password } = req.body 
-
-    const user = await User.findOne({ username: req.body.username })
-    if (!user) {
-      return res.status(404).json({ 
-        success: false, 
-        message: "User does not exist"})
-    }
-    
-    if (user && bcrypt.compareSync(req.body.password, user.password)) {
-      res.status(201).json({
-        success: true,
-        message: "User logged in",
-        userId: user.id, 
-        accessToken: user.accessToken})
-  }} catch(err) {
-    res.status(400).json({
-      success: false,
-      notFound: true})
-  }
-})
+// MOUNT AUTH ROUTER
+app.use("/users", authRouter)
 
 // SEED DATABASE 
 if (process.env.RESET_DB) {
