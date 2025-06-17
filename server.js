@@ -30,11 +30,10 @@ mongoose.connect(mongoUrl, {
 app.use(cors())
 app.use(express.json())
 
-// MOUNT AUTH ROUTER
-app.use("/users", authRouter)
-
-// MOUNT THOUGHTS ROUTER
-app.use("/", thoughtsRouter)
+// MOUNT ROUTES
+app.use("/auth", authRouter)
+app.use("/thoughts", thoughtsRouter)
+app.use("/users", usersRouter)
 
 // SEED DATABASE 
 if (process.env.RESET_DB) {
@@ -54,80 +53,6 @@ app.get("/", (req, res) => {
     message: "Hello Happy Thoughts API",
     endpoints: endpoints
   })
-})
-
-// DELETE ONE THOUGHT
-app.delete("/thoughts/:id", authenticateUser, async (req, res) => {
-  
-  try {
-    const delThought = await Thought.findByIdAndDelete(req.params.id)
-    
-    if (!delThought) {
-     return res.status(404).json({ error: "This thought not found" })
-    }
-      res.status(201).json({
-        success: true,
-        response: delThought,
-        message: "Thought deleted successfully."
-    })
-  } catch (error){
-    res.status(500).json({
-      success: false,
-      response: error,
-      message: "Could not delete thought"
-    })
-  }
-})
-
-// UPDATE/EDIT THOUGHT
-app.patch("/thoughts/:id", authenticateUser, async (req, res) => {
-
-  const { id } = req.params
-  const { editThought } = req.body
-  
-  try {
-    const thought = await Thought.findByIdAndUpdate( id, { message: editThought }, { new: true, runValidators: true })
-    
-    if (!thought) {
-     return res.status(404).json({ error: "This thought not found, no update possible." })
-    }
-      res.status(201).json({
-        success: true,
-        response: thought,
-        message: "Thought updated successfully."
-    })
-  } catch (error){
-    res.status(500).json({
-      success: false,
-      response: error,
-      message: "Could not update thought"
-    })
-  }
-})
-
-// POST A LIKE
-app.post("/thoughts/:id/like", async (req, res) => {
-
-  const { id } = req.params
-  
-  try {
-    const thought = await Thought.findByIdAndUpdate( id, { $inc: { hearts: 1 } }, { new: true, runValidators: true })
-    
-    if (!thought) {
-     return res.status(404).json({ error: "This thought not found, no update possible." })
-    }
-      res.status(201).json({
-        success: true,
-        response: thought,
-        message: "New like added."
-    })
-  } catch (error){
-    res.status(500).json({
-      success: false,
-      response: error,
-      message: "Could not update likes."
-    })
-  }
 })
 
 

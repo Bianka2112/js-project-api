@@ -6,7 +6,7 @@ import { User } from "../models/User"
 const authRouter = Router()
 
 // REGISTRATION ENDPOINT - ASSIGN ENCRYPTED TOKEN (CREATE)
-authRouter.post("/", async (req, res) => {
+authRouter.post("/register", async (req, res) => {
   try {
     const { username, email, password } = req.body
     if (!username || !password) {

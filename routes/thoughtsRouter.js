@@ -53,4 +53,85 @@ thoughtsRouter.post("/thoughts", authenticateUser, async (req, res) => {
   }
 })
 
+
+// DELETE THOUGHT
+thoughtsRouter.delete("/:id", authenticateUser, async (req, res) => {
+  
+  try {
+    const delThought = await Thought.findByIdAndDelete({ _id: req.params.id, createdBy: req.user._id })
+    
+    if (!delThought) {
+     return res.status(404).json({ 
+      success: false,
+      message: "Not found or authorized" 
+    })
+    }
+      res.status(200).json({
+        success: true,
+        response: delThought,
+        message: "Thought deleted successfully."
+    })
+  } catch (error){
+    res.status(500).json({
+      success: false,
+      response: error,
+      message: "Could not delete thought"
+    })
+  }
+})
+
+// UPDATE/EDIT THOUGHT
+thoughtsRouter.patch("/:id", authenticateUser, async (req, res) => {
+  const { editThought } = req.body
+  
+  try {
+    const thought = await Thought.findByIdAndUpdate({ _id: req.params.id, createdBy: req.user._id },
+      { message: editThought }, 
+      { new: true, runValidators: true })
+    
+    if (!thought) {
+     return res.status(404).json({ 
+      success: false,
+      message: "Not found, no update possible." 
+    })
+    }
+      res.status(200).json({
+        success: true,
+        response: thought,
+        message: "Thought updated successfully."
+    })
+  } catch (error){
+    res.status(500).json({
+      success: false,
+      response: error,
+      message: "Could not update thought"
+    })
+  }
+})
+
+// POST A LIKE
+thoughtsRouter.post("/:id/like", async (req, res) => {
+
+  const { id } = req.params
+  
+  try {
+    const thought = await Thought.findByIdAndUpdate( id, { $inc: { hearts: 1 } }, { new: true, runValidators: true })
+    
+    if (!thought) {
+     return res.status(404).json({ error: "This thought not found, no update possible." })
+    }
+      res.status(201).json({
+        success: true,
+        response: thought,
+        message: "New like added."
+    })
+  } catch (error){
+    res.status(500).json({
+      success: false,
+      response: error,
+      message: "Could not update likes."
+    })
+  }
+})
+
 export default thoughtsRouter
