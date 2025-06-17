@@ -33,7 +33,7 @@ thoughtsRouter.get("/thoughts", async (req, res) => {
 })
 
 // POST THOUGHT
-thoughtsRouter.post("/thoughts", authenticateUser, async (req, res) => {
+thoughtsRouter.post("/", authenticateUser, async (req, res) => {
   const { message, hearts, createdAt } = req.body
 
   try {

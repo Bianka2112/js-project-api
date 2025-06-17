@@ -8,6 +8,7 @@ import thoughtsList from "./data/thoughtsList.json"
 import { Thought } from "./models/Thought"
 import authRouter, { authenticateUser } from "./routes/authRouter"
 import thoughtsRouter from "./routes/thoughtsRouter"
+import usersRouter from "./routes/usersRouter"
 
 // CONNECTION SETTINGS
 const port = process.env.PORT || 8000
