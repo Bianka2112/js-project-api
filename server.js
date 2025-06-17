@@ -6,7 +6,8 @@ import mongoose from "mongoose"
 
 import thoughtsList from "./data/thoughtsList.json"
 import { Thought } from "./models/Thought"
-import authRouter, { authenticateUser } from "./routers/authRouter"
+import authRouter, { authenticateUser } from "./routes/authRouter"
+import thoughtsRouter from "./routes/thoughtsRouter"
 
 // CONNECTION SETTINGS
 const port = process.env.PORT || 8000
@@ -31,6 +32,9 @@ app.use(express.json())
 
 // MOUNT AUTH ROUTER
 app.use("/users", authRouter)
+
+// MOUNT THOUGHTS ROUTER
+app.use("/", thoughtsRouter)
 
 // SEED DATABASE 
 if (process.env.RESET_DB) {

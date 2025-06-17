@@ -1,6 +1,7 @@
 import bcrypt from "bcryptjs"
-import { User } from "../models/User"
 import { Router } from "express"
+
+import { User } from "../models/User"
 
 const authRouter = Router()
 
@@ -78,12 +79,32 @@ authRouter.post("/login", async (req, res) => {
 
 // MIDDLEWARE TO AUTH
 export const authenticateUser = async (req, res, next) => {
-  const user = await User.findOne({accessToken: req.header("Authorization")})
-  if(user) {
-    req.user = user
-    next()
-  } else {
-    res.status(401).json({loggedOut: true})
+  try {
+
+    const token = req.header("Authorization")
+    if (!token) {
+      return res.status(401).json({
+        success: false,
+        message: "Access token missing. Please login to continue."
+      })
+    }
+
+    const user = await User.findOne({ accessToken: token })
+    if(!user) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid token. Please login in again.",
+        loggedOut: true
+      })
+    } 
+      req.user = user
+      next()
+  } catch (err) {
+      console.error("Authentication error", err)
+      res.status(500).json({
+        success: false,
+        message: "Server error during authentication."
+      })
   }
 }
 
