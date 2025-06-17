@@ -1,11 +1,12 @@
 import cors from "cors"
+import dotenv from "dotenv"
 import express from "express"
 import listEndpoints from "express-list-endpoints"
 import mongoose from "mongoose"
-import dotenv from "dotenv"
-import { Thought } from "./models/Thought"
+
 import thoughtsList from "./data/thoughtsList.json"
-import authRouter, { authenticateUser } from "./routes/authRouter"
+import { Thought } from "./models/Thought"
+import authRouter, { authenticateUser } from "./routers/authRouter"
 
 // CONNECTION SETTINGS
 const port = process.env.PORT || 8000
@@ -49,54 +50,6 @@ app.get("/", (req, res) => {
     message: "Hello Happy Thoughts API",
     endpoints: endpoints
   })
-})
-
-// GET ALL THOUGHTS
-app.get("/thoughts", async (req, res) => {
-  
-  try {
-  const thoughts = await Thought.find()
-  if (thoughtsList.length === 0) {
-    return res.status(404).json({
-      success: false,
-      response: [],
-      message: "No thoughts available."
-    })
-  }
-    res.status(200).json({
-      success: true,
-      response: thoughts,
-      message: "thoughts available."
-    })
-
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      response: error,
-      message: "Failed to fetch thoughts."
-    })
-  }
-})
-
-// POST THOUGHT
-app.post("/thoughts", async (req, res) => {
-  const { message, hearts, createdAt } = req.body
-
-  try {
-    const newThought = await new Thought({ message, hearts, createdAt }).save()
-
-    res.status(201).json({
-      success: true,
-      response: newThought,
-      message: "Thought posted successfully."
-    })
-  } catch (error){
-    res.status(500).json({
-      success: false,
-      response: error,
-      message: "Could not post thought"
-    })
-  }
 })
 
 // DELETE ONE THOUGHT
