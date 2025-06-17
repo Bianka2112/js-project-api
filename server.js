@@ -1,20 +1,61 @@
 import cors from "cors"
+import dotenv from "dotenv"
 import express from "express"
+import listEndpoints from "express-list-endpoints"
+import mongoose from "mongoose"
 
-// Defines the port the app will run on. Defaults to 8080, but can be overridden
-// when starting the server. Example command to overwrite PORT env variable value:
-// PORT=9000 npm start
-const port = process.env.PORT || 8080
+import thoughtsList from "./data/thoughtsList.json"
+import { Thought } from "./models/Thought"
+import authRouter, { authenticateUser } from "./routes/authRouter"
+import thoughtsRouter from "./routes/thoughtsRouter"
+import usersRouter from "./routes/usersRouter"
+
+// CONNECTION SETTINGS
+const port = process.env.PORT || 8000
 const app = express()
 
-// Add middlewares to enable cors and json body parsing
+dotenv.config()
+const mongoUrl = process.env.MONGO_URL || "mongodb://localhost:27017/thoughts"
+console.log("🔌 Connecting to MongoDB at:", mongoUrl)
+
+mongoose.connect(mongoUrl, {
+  autoIndex: true
+})
+.then(() => {
+  console.log("🌱 Connected to DB:", mongoose.connection.db.databaseName);
+})
+.catch((err) => {
+  console.error("❌ MongoDB connection error:", err)
+})
+
 app.use(cors())
 app.use(express.json())
 
-// Start defining your routes here
+// MOUNT ROUTES
+app.use("/auth", authRouter)
+app.use("/thoughts", thoughtsRouter)
+app.use("/users", usersRouter)
+
+// SEED DATABASE 
+if (process.env.RESET_DB) {
+  const seedDatabase = async () => {
+    await Thought.deleteMany({})
+    thoughtsList.forEach(thought => {
+      new Thought(thought).save()
+    })
+  }
+  seedDatabase()
+}
+
+// ENDPOINTS DOC
 app.get("/", (req, res) => {
-  res.send("Hello Technigo!")
+  const endpoints = listEndpoints(app)
+  res.json({
+    message: "Hello Happy Thoughts API",
+    endpoints: endpoints
+  })
 })
+
 
 // Start the server
 app.listen(port, () => {
