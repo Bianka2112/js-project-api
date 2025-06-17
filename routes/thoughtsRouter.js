@@ -47,7 +47,7 @@ thoughtsRouter.post("/", authenticateUser, async (req, res) => {
   } catch (error){
     res.status(500).json({
       success: false,
-      response: error,
+      response: error.message,
       message: "Could not post thought"
     })
   }
@@ -74,7 +74,7 @@ thoughtsRouter.delete("/:id", authenticateUser, async (req, res) => {
   } catch (error){
     res.status(500).json({
       success: false,
-      response: error,
+      error: error.message,
       message: "Could not delete thought"
     })
   }
@@ -83,6 +83,12 @@ thoughtsRouter.delete("/:id", authenticateUser, async (req, res) => {
 // UPDATE/EDIT THOUGHT
 thoughtsRouter.patch("/:id", authenticateUser, async (req, res) => {
   const { editThought } = req.body
+  if (!editThought || editThought.trim().length === 0) {
+    return res.status(400).json({
+      success: false,
+      message: "editThought is required to update the post."
+    })
+  }
   
   try {
     const thought = await Thought.findByIdAndUpdate({ _id: req.params.id, createdBy: req.user._id },
@@ -100,11 +106,18 @@ thoughtsRouter.patch("/:id", authenticateUser, async (req, res) => {
         response: thought,
         message: "Thought updated successfully."
     })
-  } catch (error){
+  } catch (error) {
+    if (error.name === "ValidationError") {
+      return res.status(400).json({
+        success: false,
+        errors: error.errors,
+        message: "Validation failed",
+      })
+    }
     res.status(500).json({
       success: false,
-      response: error,
-      message: "Could not update thought"
+      error: error.message,
+      message: "Server error - try again later."
     })
   }
 })
@@ -125,11 +138,18 @@ thoughtsRouter.post("/:id/like", async (req, res) => {
         response: thought,
         message: "New like added."
     })
-  } catch (error){
+  } catch (error) {
+    if (error.name === "ValidationError") {
+      return res.status(400).json({
+        success: false,
+        errors: error.errors,
+        message: "Validation failed",
+      })
+    }
     res.status(500).json({
       success: false,
-      response: error,
-      message: "Could not update likes."
+      error: error.message,
+      message: "Server error - try again later."
     })
   }
 })
