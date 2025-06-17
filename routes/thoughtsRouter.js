@@ -6,7 +6,7 @@ import { authenticateUser } from "./authRouter"
 const thoughtsRouter = Router()
 
 // GET ALL THOUGHTS
-thoughtsRouter.get("/thoughts", async (req, res) => {
+thoughtsRouter.get("/", async (req, res) => {
   
   try {
   const thoughts = await Thought.find()
@@ -28,6 +28,33 @@ thoughtsRouter.get("/thoughts", async (req, res) => {
       success: false,
       response: error,
       message: "Failed to fetch thoughts."
+    })
+  }
+})
+
+// GET ONE THOUGHT
+thoughtsRouter.get("/:id", async (req, res) => {
+  const { id } = req.params
+  
+  try {
+  const thought = await Thought.findById(id)
+  if (!thought) {
+    return res.status(404).json({
+      success: false,
+      message: "No thought found."
+    })
+  }
+    res.status(200).json({
+      success: true,
+      response: thought,
+      message: "Thought found."
+    })
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      response: error.messsage,
+      message: "Failed to find this thought."
     })
   }
 })
