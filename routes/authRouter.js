@@ -30,18 +30,24 @@ authRouter.post("/register", async (req, res) => {
   } catch(err) {
       if (err.code === 11000) {
         const field = Object.keys(err.keyPattern)[0]
-        res.status(409).json({
+        return res.status(409).json({
           success: false,
           message: `A user with that ${field} already exists.`,
         })
-      } else {
-        console.error(err)
-        res.status(400).json({
+      } 
+      if (err.errors) {
+        const validationErrors = Object.values(err.errors).map(e => e.message)
+        return res.status(400).json({
           success: false,
-          message: "Could not create user", 
-          errors: err.errors
+          message: "Invalid input", 
+          errors: validationErrors
         })
         }
+      console.error(err) 
+        res.status(500).json({
+          success: false,
+          message: "Unexpected server error."
+        })
     }
 })
 
