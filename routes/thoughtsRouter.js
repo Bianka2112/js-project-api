@@ -9,8 +9,8 @@ const thoughtsRouter = Router()
 thoughtsRouter.get("/", async (req, res) => {
   
   try {
-  const thoughts = await Thought.find()
-  if (Thought.length === 0) {
+  const thoughts = await Thought.find().sort({ createdAt: -1 })
+  if (thoughts.length === 0) {
     return res.status(404).json({
       success: false,
       response: [],
@@ -53,7 +53,7 @@ thoughtsRouter.get("/:id", async (req, res) => {
   } catch (error) {
     res.status(500).json({
       success: false,
-      response: error.messsage,
+      response: error.message,
       message: "Failed to find this thought."
     })
   }
@@ -93,6 +93,12 @@ thoughtsRouter.delete("/:id", authenticateUser, async (req, res) => {
       message: "Not found or authorized" 
     })
     }
+    if (delThought.createdBy.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ 
+        success: false, 
+        message: "Unauthorized to delete this thought" 
+      })
+    }
       res.status(200).json({
         success: true,
         response: delThought,
@@ -127,6 +133,12 @@ thoughtsRouter.patch("/:id", authenticateUser, async (req, res) => {
       success: false,
       message: "Not found, no update possible." 
     })
+    }
+    if (thought.createdBy.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ 
+        success: false, 
+        message: "Unauthorized to edit this thought" 
+      })
     }
       res.status(200).json({
         success: true,
