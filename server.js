@@ -52,6 +52,7 @@ app.get("/", (req, res) => {
   const endpoints = listEndpoints(app)
   res.json({
     message: "Hello Happy Thoughts API",
+    usage: "Visit /thoughts to get all thoughts, or see the list below for all available endpoints.",
     endpoints: endpoints
   })
 })
