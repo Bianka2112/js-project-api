@@ -24,7 +24,7 @@ authRouter.post("/register", async (req, res) => {
     res.status(200).json({
       message: "Signup success",
       success: true,
-      id: user._id, 
+      userid: user._id, 
       username: user.username,
       accessToken: user.accessToken})
 
@@ -68,7 +68,7 @@ authRouter.post("/login", async (req, res) => {
       res.status(201).json({
         success: true,
         message: "User successfully logged in",
-        userId: user.id, 
+        userId: user._id, 
         username: user.username,
         accessToken: user.accessToken
       })
